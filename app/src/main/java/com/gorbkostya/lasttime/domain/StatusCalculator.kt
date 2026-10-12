@@ -12,26 +12,27 @@ object StatusCalculator {
     }
 
 
-    fun status(task: Task, today: LocalDate): TaskStatus {
+    fun ratio(task: Task, today: LocalDate): Double? {
         if (task.intervalDays == null) {
-            return TaskStatus.NO_DEADLINE
+            return null
         }
 
-        val fraction = (daysSince(task.lastDone, today).toDouble() / task.intervalDays.toDouble())
+        return daysSince(task.lastDone, today).toDouble() / task.intervalDays.toDouble()
+    }
+
+
+    fun status(task: Task, today: LocalDate): TaskStatus {
+        val r = ratio(task, today) ?: return TaskStatus.NO_DEADLINE
         return when {
-            fraction < 0.75 -> TaskStatus.OK
-            fraction < 1.0 -> TaskStatus.SOON
+            r < 0.75 -> TaskStatus.OK
+            r < 1.0 -> TaskStatus.SOON
             else -> TaskStatus.LATE
         }
     }
 
 
     fun progress(task: Task, today: LocalDate): Float {
-        if (task.intervalDays == null) {
-            return 0f
-        }
-
-        val fraction = (daysSince(task.lastDone, today).toFloat() / task.intervalDays.toFloat()).coerceAtMost(1f)
-        return fraction
+        val r = ratio(task, today) ?: return 0f
+        return r.toFloat().coerceAtMost(1f)
     }
 }
