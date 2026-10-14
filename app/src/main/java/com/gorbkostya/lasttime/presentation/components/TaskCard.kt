@@ -107,7 +107,7 @@ fun TaskCard(
                     val over = days - interval
 
                     Text(
-                        text = "${pluralStringResource(R.plurals.days, over.toInt())} назад",
+                        text = "${pluralStringResource(R.plurals.days, days.toInt())} назад",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

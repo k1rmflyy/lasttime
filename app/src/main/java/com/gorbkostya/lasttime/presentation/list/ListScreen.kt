@@ -1,6 +1,5 @@
 package com.gorbkostya.lasttime.presentation.list
 
-import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,46 +22,36 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gorbkostya.lasttime.R
-import com.gorbkostya.lasttime.domain.StatusCalculator
 import com.gorbkostya.lasttime.domain.model.Category
-import com.gorbkostya.lasttime.domain.model.Task
-import com.gorbkostya.lasttime.domain.model.TaskStatus
 import com.gorbkostya.lasttime.presentation.components.CategoryChip
 import com.gorbkostya.lasttime.presentation.components.StatTile
 import com.gorbkostya.lasttime.presentation.components.TaskCard
 import com.gorbkostya.lasttime.presentation.label
 import com.gorbkostya.lasttime.presentation.ui.theme.LastTimeTheme
 import com.gorbkostya.lasttime.presentation.ui.theme.extra
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+
 @Composable
-fun ListScreen(tasks: List<Task>, today: LocalDate) {
-    var selectedCategory by remember { mutableStateOf<Category?>(null) }
+fun ListScreen(viewModel: ListViewModel = viewModel()) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    ListContent(state = state, onCommand = viewModel::onCommand)
+}
 
-    val lateCount = tasks.count { StatusCalculator.status(it, today) == TaskStatus.LATE }
-    val soonCount = tasks.count { StatusCalculator.status(it, today) == TaskStatus.SOON }
-    val okCount = tasks.count { StatusCalculator.status(it, today) == TaskStatus.OK }
-
-    val visible = tasks
-        .filter { selectedCategory == null || it.category == selectedCategory }
-        .sortedByDescending { StatusCalculator.ratio(it, today) ?: -1.0 }
-
+@Composable
+fun ListContent(state: ListState, onCommand: (ListCommand) -> Unit) {
     val formatter = DateTimeFormatter.ofPattern("EEEE, d MMMM", Locale.forLanguageTag("ru"))
-    val dateText = today.format(formatter).replaceFirstChar { it.uppercase() }
-
-
+    val dateText = state.today.format(formatter).replaceFirstChar { it.uppercase() }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
@@ -92,8 +81,7 @@ fun ListScreen(tasks: List<Task>, today: LocalDate) {
             ) {
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                    ,
+                        .fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column(
@@ -119,7 +107,7 @@ fun ListScreen(tasks: List<Task>, today: LocalDate) {
                             .size(44.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.surface)
-                            .clickable{},
+                            .clickable {},
                         contentAlignment = Alignment.Center
 
                     ) {
@@ -137,21 +125,21 @@ fun ListScreen(tasks: List<Task>, today: LocalDate) {
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     StatTile(
-                       lateCount,
-                       "Просрочено",
-                       MaterialTheme.extra.late,
-                       modifier = Modifier.weight(1f)
-                   )
+                        state.lateCount,
+                        "Просрочено",
+                        MaterialTheme.extra.late,
+                        modifier = Modifier.weight(1f)
+                    )
 
                     StatTile(
-                        soonCount,
+                        state.soonCount,
                         "Скоро",
                         MaterialTheme.extra.soon,
                         modifier = Modifier.weight(1f)
                     )
 
                     StatTile(
-                        okCount,
+                        state.okCount,
                         "В порядке",
                         MaterialTheme.extra.ok,
                         modifier = Modifier.weight(1f)
@@ -166,31 +154,36 @@ fun ListScreen(tasks: List<Task>, today: LocalDate) {
             ) {
 
                 item {
-                    CategoryChip("Все", selectedCategory == null) { selectedCategory = null}
+                    CategoryChip("Все", state.selectedCategory == null) { onCommand(ListCommand.SelectCategory(null))  }
                 }
 
                 items(Category.entries) { category ->
-                    CategoryChip(category.label(), selectedCategory == category) {
-                        selectedCategory = category
+                    CategoryChip(category.label(), state.selectedCategory == category) {
+                        onCommand(ListCommand.SelectCategory(category))
                     }
                 }
             }
 
             LazyColumn(
-                contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 120.dp),
+                contentPadding = PaddingValues(
+                    start = 20.dp,
+                    end = 20.dp,
+                    top = 20.dp,
+                    bottom = 120.dp
+                ),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 item {
                     Text(
-                        text = "СНАЧАЛА НОВЫЕ",
+                        text = "СНАЧАЛА СРОЧНЫЕ",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 4.dp)
                     )
                 }
 
-                items(visible, key = {it.id}) { task ->
-                    TaskCard(task, today, onDone = {}, onClick = {})
+                items(state.visible, key = { it.id }) { task ->
+                    TaskCard(task, state.today, onDone = {onCommand(ListCommand.MarkDone(task.id))}, onClick = {})
                 }
             }
         }
@@ -198,24 +191,16 @@ fun ListScreen(tasks: List<Task>, today: LocalDate) {
 }
 
 
-
-
 @Preview(showSystemUi = true)
 @Composable
-private fun ListScreenPreview() {
+private fun ListContentPreview() {
     LastTimeTheme {
-        ListScreen(tasks = previewTasks, today = previewToday)
+        ListContent(
+            state = ListState(tasks = previewTasks, today = previewToday),
+            onCommand = {}
+        )
     }
 }
-
-@Preview(showSystemUi = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun ListScreenDarkPreview() {
-    LastTimeTheme(darkTheme = true) {
-        ListScreen(tasks = previewTasks, today = previewToday)
-    }
-}
-
 
 
 
