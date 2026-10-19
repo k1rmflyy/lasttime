@@ -3,6 +3,7 @@ package com.gorbkostya.lasttime.data.local
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
 
@@ -20,4 +21,18 @@ interface TaskDao {
 
     @Insert
     suspend fun insertDone(entry: DoneEntity)
+
+    @Query("SELECT COUNT(*) FROM tasks")
+    suspend fun count(): Int
+
+    @Insert
+    suspend fun insertAll(task: List<TaskEntity>)
+
+
+    @Transaction
+    suspend fun markDone(id: Long, date: Long) {
+        updateLastDone(id, date)
+        insertDone(DoneEntity(taskId = id, date = date))
+    }
+
 }

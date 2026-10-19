@@ -43,7 +43,7 @@ import java.util.Locale
 
 
 @Composable
-fun ListScreen(viewModel: ListViewModel = viewModel()) {
+fun ListScreen(viewModel: ListViewModel = viewModel(factory = ListViewModel.Factory)) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     ListContent(state = state, onCommand = viewModel::onCommand)
 }

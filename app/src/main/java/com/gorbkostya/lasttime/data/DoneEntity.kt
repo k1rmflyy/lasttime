@@ -7,6 +7,6 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "done_entries")
 data class DoneEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val tasKId: Long,
+    val taskId: Long,
     val date: Long
 )
