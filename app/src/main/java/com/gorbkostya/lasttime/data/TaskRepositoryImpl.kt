@@ -4,6 +4,7 @@ import com.gorbkostya.lasttime.data.local.TaskDao
 import com.gorbkostya.lasttime.data.local.toDomain
 import com.gorbkostya.lasttime.data.local.toEntity
 import com.gorbkostya.lasttime.domain.TaskRepository
+import com.gorbkostya.lasttime.domain.model.DoneEntry
 import com.gorbkostya.lasttime.domain.model.Task
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -26,7 +27,21 @@ class TaskRepositoryImpl(
 
     override suspend fun seedIfEmpty(samples: List<Task>) {
         if (dao.count() == 0) {
-            dao.insertAll(samples.map { it.toEntity() })
+            samples.forEach { dao.insertWithHistory(it.toEntity()) }
+        }
+    }
+
+    override fun observeTask(id: Long): Flow<Task?> {
+        return dao.observeTask(id).map { entity ->
+            entity?.toDomain()
+        }
+    }
+
+    override fun observeHistory(taskId: Long): Flow<List<DoneEntry>> {
+        return dao.observeHistory(taskId).map {entities ->
+            entities.map {
+                it.toDomain()
+            }
         }
     }
 }

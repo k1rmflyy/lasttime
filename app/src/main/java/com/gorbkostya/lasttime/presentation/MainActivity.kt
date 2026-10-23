@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.gorbkostya.lasttime.presentation.list.ListScreen
+import com.gorbkostya.lasttime.presentation.navigation.AppNavHost
 import com.gorbkostya.lasttime.presentation.ui.theme.LastTimeTheme
 
 class MainActivity : ComponentActivity() {
@@ -13,7 +13,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             LastTimeTheme {
-                ListScreen()
+                AppNavHost()
             }
         }
     }

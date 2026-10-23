@@ -7,7 +7,6 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.gorbkostya.lasttime.data.sampleTasks
 import com.gorbkostya.lasttime.domain.TaskRepository
-import com.gorbkostya.lasttime.domain.model.Category
 import com.gorbkostya.lasttime.presentation.LastTimeApp
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,7 +19,7 @@ class ListViewModel(
 ): ViewModel() {
 
     private val _state = MutableStateFlow(
-        ListState(tasks = previewTasks, today = previewToday)
+        ListState(today = LocalDate.now())
     )
 
     val state

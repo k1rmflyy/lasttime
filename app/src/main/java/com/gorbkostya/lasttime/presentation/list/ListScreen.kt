@@ -43,20 +43,20 @@ import java.util.Locale
 
 
 @Composable
-fun ListScreen(viewModel: ListViewModel = viewModel(factory = ListViewModel.Factory)) {
+fun ListScreen(viewModel: ListViewModel = viewModel(factory = ListViewModel.Factory), onTaskClick: (Long) -> Unit, onAddClick: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    ListContent(state = state, onCommand = viewModel::onCommand)
+    ListContent(state = state, onCommand = viewModel::onCommand, onTaskClick = onTaskClick, onAddClick = onAddClick)
 }
 
 @Composable
-fun ListContent(state: ListState, onCommand: (ListCommand) -> Unit) {
+fun ListContent(state: ListState, onCommand: (ListCommand) -> Unit, onTaskClick: (Long) -> Unit, onAddClick: () -> Unit) {
     val formatter = DateTimeFormatter.ofPattern("EEEE, d MMMM", Locale.forLanguageTag("ru"))
     val dateText = state.today.format(formatter).replaceFirstChar { it.uppercase() }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
             FloatingActionButton(
-                onClick = {},
+                onClick = onAddClick,
                 shape = RoundedCornerShape(22.dp),
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -64,7 +64,7 @@ fun ListContent(state: ListState, onCommand: (ListCommand) -> Unit) {
 
                 ) {
                 Icon(
-                    painterResource(R.drawable.ic_plus),
+                    painter = painterResource(R.drawable.ic_plus),
                     contentDescription = "Новое дело"
                 )
             }
@@ -183,7 +183,7 @@ fun ListContent(state: ListState, onCommand: (ListCommand) -> Unit) {
                 }
 
                 items(state.visible, key = { it.id }) { task ->
-                    TaskCard(task, state.today, onDone = {onCommand(ListCommand.MarkDone(task.id))}, onClick = {})
+                    TaskCard(task, state.today, onDone = {onCommand(ListCommand.MarkDone(task.id))}, onClick = {onTaskClick(task.id)})
                 }
             }
         }
@@ -197,7 +197,9 @@ private fun ListContentPreview() {
     LastTimeTheme {
         ListContent(
             state = ListState(tasks = previewTasks, today = previewToday),
-            onCommand = {}
+            onCommand = {},
+            onTaskClick = {},
+            onAddClick = {}
         )
     }
 }

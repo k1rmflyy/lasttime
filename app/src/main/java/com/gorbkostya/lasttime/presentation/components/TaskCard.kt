@@ -116,20 +116,7 @@ fun TaskCard(
         }
 
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(6.dp)
-                .clip(RoundedCornerShape(3.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Box(
-               modifier = Modifier
-                   .fillMaxWidth(progress)
-                   .fillMaxHeight()
-                   .background(status.color())
-            ) { }
-        }
+        ProgressBar(progress, status.color(), 6.dp)
 
 
         Row(

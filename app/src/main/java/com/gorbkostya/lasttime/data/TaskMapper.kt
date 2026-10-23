@@ -1,6 +1,7 @@
 package com.gorbkostya.lasttime.data.local
 
 import com.gorbkostya.lasttime.domain.model.Category
+import com.gorbkostya.lasttime.domain.model.DoneEntry
 import com.gorbkostya.lasttime.domain.model.Task
 import java.time.LocalDate
 
@@ -20,4 +21,10 @@ fun Task.toEntity(): TaskEntity = TaskEntity(
     intervalDays = intervalDays,
     lastDone = lastDone.toEpochDay(),
     remind = remind
+)
+
+fun DoneEntity.toDomain(): DoneEntry = DoneEntry(
+    id = id,
+    taskId = taskId,
+    date = LocalDate.ofEpochDay(date)
 )

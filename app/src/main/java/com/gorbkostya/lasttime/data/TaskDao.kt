@@ -35,4 +35,17 @@ interface TaskDao {
         insertDone(DoneEntity(taskId = id, date = date))
     }
 
+
+    @Query("SELECT * FROM tasks WHERE id = :id")
+    fun observeTask(id: Long): Flow<TaskEntity?>
+
+    @Query("SELECT * FROM done_entries WHERE taskId = :taskId ORDER BY date DESC")
+    fun observeHistory(taskId: Long): Flow<List<DoneEntity>>
+
+    @Insert
+    suspend fun insertWithHistory(task: TaskEntity): Long {
+        val id = insert(task)
+        insertDone(DoneEntity(taskId = id, date = task.lastDone))
+        return id
+    }
 }
