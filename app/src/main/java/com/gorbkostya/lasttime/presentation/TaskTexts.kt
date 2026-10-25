@@ -14,7 +14,8 @@ fun Category.label(): String  {
         Category.HOME -> "Дом"
         Category.HEALTH -> "Здоровье"
         Category.PEOPLE -> "Люди"
-        Category.CAR -> "Машина"
+        Category.EDUCATION -> "Образование"
+        Category.WORK -> "Работа"
         Category.OTHER -> "Другое"
     }
 }

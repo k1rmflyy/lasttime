@@ -126,7 +126,7 @@ fun ListContent(state: ListState, onCommand: (ListCommand) -> Unit, onTaskClick:
                 ) {
                     StatTile(
                         state.lateCount,
-                        "Просрочено",
+                        "Истекло",
                         MaterialTheme.extra.late,
                         modifier = Modifier.weight(1f)
                     )

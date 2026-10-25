@@ -4,6 +4,7 @@ enum class Category {
     HOME,
     HEALTH,
     PEOPLE,
-    CAR,
+    EDUCATION,
+    WORK,
     OTHER
 }
