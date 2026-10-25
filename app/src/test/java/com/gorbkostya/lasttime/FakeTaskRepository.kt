@@ -42,4 +42,13 @@ class FakeTaskRepository : TaskRepository {
     override fun observeHistory(taskId: Long): Flow<List<DoneEntry>> {
         return flowOf(emptyList())
     }
+
+    override suspend fun addTask(task: Task): Long {
+        val newId = (tasks.value.maxOfOrNull { it.id} ?: 0L) + 1
+        tasks.update { list -> list + task.copy(id = newId) }
+        return newId
+    }
+
+
+    fun allTasks() = tasks.value
 }

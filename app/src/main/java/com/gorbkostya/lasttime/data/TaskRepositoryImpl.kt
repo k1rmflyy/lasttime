@@ -44,4 +44,9 @@ class TaskRepositoryImpl(
             }
         }
     }
+
+    override suspend fun addTask(task: Task): Long {
+        return dao.insertWithHistory(task.toEntity())
+    }
+
 }

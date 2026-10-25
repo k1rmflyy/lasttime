@@ -13,4 +13,6 @@ interface TaskRepository {
     fun observeTask(id: Long): Flow<Task?>
 
     fun observeHistory(taskId: Long): Flow<List<DoneEntry>>
+
+    suspend fun addTask(task: Task): Long
 }
