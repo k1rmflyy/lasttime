@@ -9,11 +9,14 @@ import java.time.LocalDate
 data class ListState(
     val tasks: List<Task> = emptyList(),
     val selectedCategory: Category? = null,
-    val today: LocalDate = LocalDate.now()
+    val today: LocalDate = LocalDate.now(),
+    val isSearching: Boolean = false,
+    val query: String = ""
 ) {
     val visible: List<Task>
         get() = tasks
             .filter { selectedCategory == null ||  it.category == selectedCategory}
+            .filter { query.isBlank() || it.title.contains(query.trim(), ignoreCase = true) }
             .sortedByDescending { StatusCalculator.ratio(it, today) ?: -1.0}
 
     val lateCount: Int

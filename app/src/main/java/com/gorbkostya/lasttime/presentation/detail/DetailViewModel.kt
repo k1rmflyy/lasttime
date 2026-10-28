@@ -46,6 +46,28 @@ class DetailViewModel(
                     repository.markDone(taskId, _state.value.today)
                 }
             }
+
+            DetailCommand.RemindToggled -> {
+                val cur = _state.value.task?.remind ?: return
+                viewModelScope.launch {
+                    repository.setRemind(taskId, !cur)
+                }
+            }
+
+            DetailCommand.DeleteClicked -> {
+                _state.update { it.copy(showDeleteDialog = true) }
+            }
+
+            DetailCommand.DeleteConfirmed -> {
+                viewModelScope.launch {
+                    repository.deleteTask(taskId)
+                    _state.update { it.copy(showDeleteDialog = false, isDeleted = true) }
+                }
+            }
+
+            DetailCommand.DeleteDismissed -> {
+                _state.update { it.copy(showDeleteDialog = false) }
+            }
         }
     }
 

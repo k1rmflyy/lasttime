@@ -1,5 +1,9 @@
 package com.gorbkostya.lasttime.presentation.list
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,14 +21,23 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -45,6 +58,17 @@ import java.util.Locale
 @Composable
 fun ListScreen(viewModel: ListViewModel = viewModel(factory = ListViewModel.Factory), onTaskClick: (Long) -> Unit, onAddClick: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+
+    }
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
     ListContent(state = state, onCommand = viewModel::onCommand, onTaskClick = onTaskClick, onAddClick = onAddClick)
 }
 
@@ -79,46 +103,57 @@ fun ListContent(state: ListState, onCommand: (ListCommand) -> Unit, onTaskClick:
                 modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(2.dp)
-                    ) {
-                        Text(
-                            text = dateText,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
 
-                        Text(
-                            text = "Последний раз",
-                            style = MaterialTheme.typography.headlineLarge,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-
-
-
-                    Box(
+                if (state.isSearching) {
+                    ListSearchBar(
+                        query = state.query,
+                        onQueryChange = { onCommand(ListCommand.QueryChanged(it)) },
+                        onClose = { onCommand(ListCommand.SearchClosed) }
+                    )
+                } else {
+                    Row(
                         modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surface)
-                            .clickable {},
-                        contentAlignment = Alignment.Center
-
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_search),
-                            contentDescription = "Поиск",
-                            modifier = Modifier.size(22.dp),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Text(
+                                text = dateText,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            Text(
+                                text = "Последний раз",
+                                style = MaterialTheme.typography.headlineLarge,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+
+
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surface)
+                                .clickable {onCommand(ListCommand.SearchOpened)},
+                            contentAlignment = Alignment.Center
+
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_search),
+                                contentDescription = "Поиск",
+                                modifier = Modifier.size(22.dp),
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
                     }
                 }
+
+
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -189,6 +224,48 @@ fun ListContent(state: ListState, onCommand: (ListCommand) -> Unit, onTaskClick:
         }
     }
 }
+
+
+
+@Composable
+private fun ListSearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onClose: () -> Unit,
+) {
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        placeholder = { Text("Поиск по делам") },
+        singleLine = true,
+        leadingIcon = {
+            Icon(painterResource(R.drawable.ic_search), contentDescription = null)
+        },
+        trailingIcon = {
+            IconButton(onClick = onClose) {
+                Icon(painterResource(R.drawable.ic_close), contentDescription = "Закрыть поиск")
+            }
+        },
+        shape = RoundedCornerShape(22.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedBorderColor = Color.Transparent,
+            focusedBorderColor = MaterialTheme.colorScheme.primary
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .focusRequester(focusRequester)
+    )
+}
+
+
 
 
 @Preview(showSystemUi = true)

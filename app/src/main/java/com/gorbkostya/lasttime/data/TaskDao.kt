@@ -48,4 +48,21 @@ interface TaskDao {
         insertDone(DoneEntity(taskId = id, date = task.lastDone))
         return id
     }
+
+    @Query("UPDATE tasks SET remind =:remind WHERE id = :id")
+    suspend fun updateRemind(remind: Boolean, id: Long)
+
+
+    @Query("DELETE FROM tasks WHERE id = :id")
+    suspend fun deleteTaskRow(id: Long)
+
+
+    @Query("DELETE FROM done_entries WHERE taskId = :taskId")
+    suspend fun deleteHistory(taskId: Long)
+
+    @Transaction
+    suspend fun deleteTask(id: Long) {
+        deleteHistory(id)
+        deleteTaskRow(id)
+    }
 }

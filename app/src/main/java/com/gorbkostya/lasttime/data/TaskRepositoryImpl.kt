@@ -49,4 +49,13 @@ class TaskRepositoryImpl(
         return dao.insertWithHistory(task.toEntity())
     }
 
+    override suspend fun setRemind(taskId: Long, remind: Boolean) {
+        dao.updateRemind(remind, taskId)
+    }
+
+    override suspend fun deleteTask(id: Long) {
+        return dao.deleteTask(id)
+    }
+
+
 }

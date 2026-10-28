@@ -15,4 +15,8 @@ interface TaskRepository {
     fun observeHistory(taskId: Long): Flow<List<DoneEntry>>
 
     suspend fun addTask(task: Task): Long
+
+    suspend fun setRemind(taskId: Long, remind: Boolean)
+
+    suspend fun deleteTask(id: Long)
 }

@@ -49,6 +49,22 @@ class FakeTaskRepository : TaskRepository {
         return newId
     }
 
+    override suspend fun setRemind(taskId: Long, remind: Boolean) {
+        tasks.update { list ->
+            list.map { task ->
+                if (task.id == taskId) {
+                    task.copy(remind = remind)
+                } else {
+                    task
+                }
+            }
+        }
+    }
+
+    override suspend fun deleteTask(id: Long) {
+        tasks.update { list -> list.filter { it.id != id } }
+    }
+
 
     fun allTasks() = tasks.value
 }

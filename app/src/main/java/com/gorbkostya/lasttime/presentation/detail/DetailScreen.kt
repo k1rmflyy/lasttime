@@ -2,6 +2,7 @@ package com.gorbkostya.lasttime.presentation.detail
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,23 +17,29 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -64,7 +71,14 @@ fun DetailScreen(
     viewModel: DetailViewModel = viewModel(factory = DetailViewModel.Factory)
 ) {
 
+
+
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(state.isDeleted) {
+        if (state.isDeleted) onBack()
+    }
+
     DetailContent(state = state, onCommand = viewModel::onCommand, onBack = onBack)
 }
 
@@ -91,20 +105,43 @@ fun DetailContent(
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-
-            FloatingActionButton(
-                onClick = onBack,
-                shape = CircleShape,
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(44.dp)
-
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_arrow_back),
-                    contentDescription = "Назад"
-                )
+                FloatingActionButton(
+                    onClick = onBack,
+                    shape = CircleShape,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(44.dp)
+
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_arrow_back),
+                        contentDescription = "Назад"
+                    )
+                }
+
+
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surface)
+                        .clickable{onCommand(DetailCommand.DeleteClicked)},
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_delete),
+                        contentDescription = "Удалить дело",
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
+
 
             Column(
                 modifier = Modifier
@@ -199,6 +236,84 @@ fun DetailContent(
 
 
             }
+
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(horizontal = 18.dp)
+            ) {
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    Text(
+                        text = "Повторять",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Text(
+                        text = intervalLabel(task.intervalDays),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .toggleable(
+                            value = task.remind,
+                            role = Role.Switch,
+                            onValueChange = {onCommand(DetailCommand.RemindToggled)},
+                            enabled = task.intervalDays != null
+                        )
+                        .height(64.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    Column {
+                        Text(
+                            text = "Напомнить",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        if (task.intervalDays == null) {
+                            Text(
+                                text = "у дела нет срока",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        } else {
+                            Text(
+                                text = "за 3 дня до срока",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Switch(
+                        checked = task.remind,
+                        onCheckedChange = null,
+                        enabled = task.intervalDays != null
+                    )
+                }
+            }
+
 
 
             Row(
@@ -320,6 +435,33 @@ fun DetailContent(
 
                 Text(if (state.doneToday) "Уже сделано сегодня" else "Сделано сегодня")
             }
+        }
+
+
+
+        if (state.showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = {onCommand(DetailCommand.DeleteDismissed)},
+                title = { Text("Удалить дело?") },
+                text = { Text("«${task.title}» и вся история будут удалены. Это нельзя отменить.")},
+                confirmButton = {
+                    TextButton(
+                        onClick = {onCommand(DetailCommand.DeleteConfirmed)}
+                    ) {
+                        Text(
+                            text = "Удалить",
+                            color = MaterialTheme.extra.late
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {onCommand(DetailCommand.DeleteDismissed)}
+                    ) {
+                        Text("Отмена")
+                    }
+                }
+            )
         }
     }
 

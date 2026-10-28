@@ -49,6 +49,18 @@ class ListViewModel(
             is ListCommand.SelectCategory -> {
                 _state.update { it.copy(selectedCategory = command.category) }
             }
+
+            ListCommand.SearchClosed -> {
+                _state.update { it.copy(isSearching = false, query = "") }
+            }
+
+            ListCommand.SearchOpened -> {
+                _state.update { it.copy(isSearching = true) }
+            }
+
+            is ListCommand.QueryChanged -> {
+                _state.update { it.copy(query = command.query) }
+            }
         }
     }
 

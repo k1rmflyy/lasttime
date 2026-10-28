@@ -8,7 +8,9 @@ import java.time.temporal.ChronoUnit
 data class DetailState(
     val task: Task? = null,
     val history: List<DoneEntry> = emptyList(),
-    val today: LocalDate = LocalDate.now()
+    val today: LocalDate = LocalDate.now(),
+    val showDeleteDialog: Boolean = false,
+    val isDeleted: Boolean = false
 ) {
 
     val doneToday: Boolean
