@@ -33,9 +33,5 @@ class LastTimeApp: Application() {
             existingPeriodicWorkPolicy = ExistingPeriodicWorkPolicy.KEEP,
             request = request
         )
-
-        WorkManager.getInstance(this).enqueue(
-            OneTimeWorkRequestBuilder<ReminderWorker>().build()
-        )
     }
 }
