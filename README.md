@@ -126,5 +126,5 @@ app/src/main/java/com/gorbkostya/lasttime/
 
 ## Автор
 
-k1rmflyy — [GitHub](https://github.com/ВАШ_НИК)
+k1rmflyy — [GitHub](https://github.com/k1rmflyy)
 
