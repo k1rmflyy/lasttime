@@ -2,7 +2,7 @@ package com.gorbkostya.lasttime.data
 
 import android.content.Context
 import androidx.room.Room
-import com.gorbkostya.lasttime.data.local.AppDatabase
+import com.gorbkostya.lasttime.di.AppDatabase
 
 class AppContainer(context: Context) {
 
